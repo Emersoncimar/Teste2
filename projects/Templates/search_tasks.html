@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load i18n %}
+
+{% block page_content %}
+<div class="container-fluid">
+    <!-- start page title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <h4 class="page-title">{% trans "Pesquisar Tarefas" %}</h4>
+            </div>
+        </div>
+    </div>
+    <!-- end page title -->
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="header-title mb-3">{% trans "Filtros de Pesquisa" %}</h4>
+
+                    <form method="POST" action="{% url 'projects:search_tasks' %}">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="searchInput" class="form-label">{% trans "Nome da Task" %}</label>
+                                    <input type="text" class="form-control" id="searchInput" name="searchInput" placeholder="{% trans 'Digite o nome da task' %}">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="projectSelect" class="form-label">{% trans "Projeto" %}</label>
+                                    <select class="form-select" id="projectSelect" name="projectSelect">
+                                        <option value="">{% trans "Todos os Projetos" %}</option>
+                                        {% for project in projects %}
+                                        <option value="{{ project.id }}">{{ project.title }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="languageSelect" class="form-label">{% trans "Linguagem de Programação" %}</label>
+                                    <select class="form-select" id="languageSelect" name="languageSelect">
+                                        <option value="">{% trans "Qualquer Linguagem de Programação" %}</option>
+                                        {% for language in programming_languages %}
+                                        <option value="{{ language.id }}">{{ language.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="applicationStatusSelect" class="form-label">{% trans "Status da Aplicação" %}</label>
+                                    <select class="form-select" id="applicationStatusSelect" name="applicationStatusSelect">
+                                        <option value="">{% trans "Todos os Status" %}</option>
+                                        {% for value, label in application_statuses.items %}
+                                        <option value="{{ value }}">{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-end mt-3">
+                            <button type="submit" class="btn btn-primary waves-effect waves-light">
+                                <i class="mdi mdi-magnify me-1"></i> {% trans "Pesquisar" %}
+                            </button>
+                        </div>
+                    </form>
+                </div> <!-- end card-body -->
+            </div> <!-- end card -->
+        </div> <!-- end col -->
+    </div> <!-- end row -->
+</div> <!-- container-fluid -->
+{% endblock %}

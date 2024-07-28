@@ -1,0 +1,143 @@
+{% extends "dashboard/Templates/base.html" %}
+{% load i18n %}
+
+{% block page_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <h4 class="page-title">Criar Novo Projeto</h4>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" id="project-form">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="header-title mb-3">Informações do Projeto</h4>
+                        {% for field in project_form %}
+                            <div class="form-group row">
+                                <label for="{{ field.id_for_label }}" class="col-sm-3 col-form-label">{{ field.label }}</label>
+                                <div class="col-sm-9">
+                                    {{ field }}
+                                    {% if field.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ field.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="header-title mb-3">Tarefas do Projeto</h4>
+                        {{ task_formset.management_form }}
+                        <div id="task-formset">
+                            {% for task_form in task_formset %}
+                                {% include "task_form_template.html" with task_form=task_form counter=forloop.counter %}
+                            {% endfor %}
+                        </div>
+                        <button type="button" id="add-task" class="btn btn-secondary">Adicionar Tarefa</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">Criar Projeto</button>
+            </div>
+        </div>
+    </form>
+</div>
+<br>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const addTaskBtn = document.getElementById('add-task');
+    const taskFormset = document.getElementById('task-formset');
+    const projectForm = document.getElementById('project-form');
+    let formCount = {{ task_formset.total_form_count }};
+    const maxForms = {{ task_formset.max_num }};
+
+    function updateFormsetManagement() {
+        const totalForms = document.getElementById('id_tasks-TOTAL_FORMS');
+        formCount = taskFormset.querySelectorAll('.task-form').length;
+        totalForms.value = formCount;
+    }
+
+    function updateTaskNumbers() {
+        taskFormset.querySelectorAll('.task-form').forEach((form, index) => {
+            const taskTitle = form.querySelector('.card-title');
+            taskTitle.firstChild.textContent = `Tarefa ${index + 1}`;
+        });
+    }
+
+    function addNewForm() {
+        if (formCount < maxForms) {
+            const templateContent = document.getElementById('task-form-template').content.cloneNode(true);
+            const newForm = templateContent.querySelector('.task-form');
+            
+            newForm.innerHTML = newForm.innerHTML.replace(/__prefix__/g, formCount);
+            taskFormset.appendChild(newForm);
+            
+            formCount++;
+            updateFormsetManagement();
+            updateTaskNumbers();
+        } else {
+            alert('Número máximo de tarefas atingido.');
+        }
+    }
+
+    function removeForm(button) {
+        const taskForm = button.closest('.task-form');
+        taskForm.remove();
+        updateFormsetManagement();
+        updateTaskNumbers();
+    }
+
+    addTaskBtn.addEventListener('click', addNewForm);
+
+    taskFormset.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-task')) {
+            e.preventDefault();
+            removeForm(e.target);
+        }
+    });
+
+    projectForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Remove empty task forms before submitting
+        taskFormset.querySelectorAll('.task-form').forEach(form => {
+            const inputs = form.querySelectorAll('input:not([type="hidden"]), select, textarea');
+            const isEmpty = Array.from(inputs).every(input => input.value === '');
+            if (isEmpty) {
+                form.remove();
+            }
+        });
+        
+        updateFormsetManagement();
+        this.submit();
+    });
+
+    // Add at least one task form if there are none
+    if (formCount === 0) {
+        addNewForm();
+    }
+});
+</script>
+
+<!-- Template for new task forms -->
+<template id="task-form-template">
+    {% include "task_form_template.html" with task_form=task_formset.empty_form counter="__prefix__" %}
+</template>
+{% endblock %}
